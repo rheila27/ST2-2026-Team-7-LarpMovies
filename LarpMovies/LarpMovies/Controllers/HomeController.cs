@@ -16,6 +16,7 @@ namespace LarpMovies.Controllers
             return View();
         }
         //proba 
+        //proba 2 
         [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
         public IActionResult Error()
         {
