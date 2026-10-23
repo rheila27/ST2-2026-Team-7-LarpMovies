@@ -1,29 +1,38 @@
+using LarpMovies.Data;
+
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
 builder.Services.AddControllersWithViews();
+
+var connectionString = builder.Configuration.GetConnectionString("MoviesDb")
+    ?? "Data Source=App_Data/movies.db";
+var dataSource = new Microsoft.Data.Sqlite.SqliteConnectionStringBuilder(connectionString).DataSource;
+if (!Path.IsPathRooted(dataSource))
+{
+    connectionString = $"Data Source={Path.Combine(builder.Environment.ContentRootPath, dataSource)}";
+}
+
+// Singleton: cialoto prilozhenie polzva edin i sushti Database prez IDatabase.
+builder.Services.AddSingleton<IDatabase>(_ => Database.Initialize(connectionString));
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Home/Error");
-    // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
     app.UseHsts();
 }
 
 app.UseHttpsRedirection();
+app.UseStaticFiles();
 app.UseRouting();
-
 app.UseAuthorization();
-
-app.MapStaticAssets();
 
 app.MapControllerRoute(
     name: "default",
-    pattern: "{controller=Home}/{action=Index}/{id?}")
-    .WithStaticAssets();
+    pattern: "{controller=Movies}/{action=Index}/{id?}");
 
+// Suzdava bazata pri start, a ne pri purvata zaqvka.
+app.Services.GetRequiredService<IDatabase>();
 
 app.Run();
