@@ -1,0 +1,43 @@
+﻿@{
+    ViewData["Title"] = "Movies";
+}
+
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+    <h1 class="h3 mb-0">Movies</h1>
+    <a asp-action="Create" class="btn btn-primary">+ New movie</a>
+</div>
+
+<div class="card shadow-sm" id="movies-app" data-list-url="@Url.Action("List")">
+    <div class="card-body">
+        <div class="input-group mb-3">
+            <span class="input-group-text">&#128269;</span>
+            <input type="search" id="movies-filter" class="form-control"
+                   placeholder="Search by title, director, year, genre, actors..." autocomplete="off" />
+        </div>
+
+        <div class="table-responsive">
+            <table class="table table-hover table-striped align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>#</th>
+                        <th>Title</th>
+                        <th>Director</th>
+                        <th>Year</th>
+                        <th>Genre</th>
+                        <th>Rating</th>
+                        <th>Actors</th>
+                    </tr>
+                </thead>
+                <tbody id="movies-body">
+                    <tr><td colspan="7" class="text-center text-muted py-4">Loading...</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div id="movies-info" class="text-muted small mt-3"></div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/js/movies.js" asp-append-version="true"></script>
+}

@@ -1,6 +1,15 @@
+
+
+
+using System.Globalization;
 using LarpMovies.Data;
 
+// Fiksirame kulturata, za da se razbirat drobnite chisla s tochka (8.3) na vsichki kompyutri haeh
+CultureInfo.DefaultThreadCurrentCulture = CultureInfo.InvariantCulture;
+CultureInfo.DefaultThreadCurrentUICulture = CultureInfo.InvariantCulture;
+
 var builder = WebApplication.CreateBuilder(args);
+
 
 builder.Services.AddControllersWithViews();
 
