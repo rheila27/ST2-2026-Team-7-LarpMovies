@@ -1,4 +1,4 @@
-using LarpMovies.Models;
+﻿using LarpMovies.Models;
 using Microsoft.Data.Sqlite;
 
 namespace LarpMovies.Data;
