@@ -29,4 +29,5 @@ public class Movie
 
     [StringLength(300, ErrorMessage = "Actors can be up to 300 characters.")]
     public string? Actors { get; set; }
+
 }
