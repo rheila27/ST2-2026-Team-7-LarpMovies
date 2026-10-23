@@ -120,7 +120,7 @@ public sealed class Database : IDatabase
         tx.Commit();
     }
 
-    // prevrushta red ot bazata v obekt Movie
+    //prevrushta red ot bazata v obekt Movie
     private static Movie Map(SqliteDataReader r) => new()
     {
         Id = r.GetInt32(0),
