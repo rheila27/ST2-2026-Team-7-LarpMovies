@@ -32,7 +32,7 @@ app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Movies}/{action=Index}/{id?}");
 
-// Sazdava bazata pri start, a ne pri purvata zayavka.
+// Suzdava bazata pri start, a ne pri purvata zaqvka.
 app.Services.GetRequiredService<IDatabase>();
 
 app.Run();
