@@ -7,7 +7,7 @@ namespace LarpMovies.Models
         public int Id { get; set; }
 
         [Required(ErrorMessage = "Name of the genre is required.")]
-        [StringLength(80, MinimumLength = 2, ErrorMessage = "Director must be 2 to 80 characters.")]
+        [StringLength(40, MinimumLength = 2, ErrorMessage = "Genre must be 2 to 40 characters.")]
         public string Name { get; set; } = "";
     }
 }
