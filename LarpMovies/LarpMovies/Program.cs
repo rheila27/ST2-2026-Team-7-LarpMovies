@@ -3,6 +3,7 @@
 
 using System.Globalization;
 using LarpMovies.Data;
+using Microsoft.EntityFrameworkCore;
 
 // Fiksirame kulturata, za da se razbirat drobnite chisla s tochka (8.3) na vsichki kompyutri haeh
 CultureInfo.DefaultThreadCurrentCulture = CultureInfo.InvariantCulture;
@@ -15,6 +16,7 @@ builder.Services.AddControllersWithViews();
 
 var connectionString = builder.Configuration.GetConnectionString("MoviesDb")
     ?? "Data Source=App_Data/movies.db";
+
 var dataSource = new Microsoft.Data.Sqlite.SqliteConnectionStringBuilder(connectionString).DataSource;
 if (!Path.IsPathRooted(dataSource))
 {
