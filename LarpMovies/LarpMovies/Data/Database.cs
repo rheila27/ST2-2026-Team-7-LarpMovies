@@ -167,4 +167,32 @@ public sealed class Database : IDatabase
         Bind(cmd, movie);
         return Convert.ToInt32(cmd.ExecuteScalar());
     }
+
+    public bool Edit(Movie movie)
+    {
+        using var connection = Open();
+        using var cmd = connection.CreateCommand();
+        cmd.CommandText = """
+            UPDATE Movies
+            SET Title = $title, Director = $director, Year = $year, Genre = $genre, Rating = $rating, Description = $description, Actors = $actors
+            WHERE Id = $id
+            """;
+        Bind(cmd, movie);
+        cmd.Parameters.AddWithValue("$id", movie.Id);
+        return cmd.ExecuteNonQuery() > 0;
+    }
+
+
+
+
+
+    public bool TitleExists(string title, int bezId = 0)
+    {
+        throw new NotImplementedException();
+    }
+
+    public bool DirectorExists(string director, int bezId = 0)
+    {
+        throw new NotImplementedException();
+    }
 }
