@@ -195,4 +195,28 @@ public sealed class Database : IDatabase
     {
         throw new NotImplementedException();
     }
+
+
+
+
+    // Select na edin film (null, ako go nqma)
+    public Movie? GetById(int id)
+    {
+        using var connection = Open();
+        using var cmd = connection.CreateCommand();
+        cmd.CommandText = "SELECT Id, Title, Director, Year, Genre, Rating, Description, Actors FROM Movies WHERE Id = $id";
+        cmd.Parameters.AddWithValue("$id", id);
+        using var reader = cmd.ExecuteReader();
+        return reader.Read() ? Map(reader) : null;
+    }
+
+    // Delete (true, ako e iztrit nqkoi red)
+    public bool Delete(int id)
+    {
+        using var connection = Open();
+        using var cmd = connection.CreateCommand();
+        cmd.CommandText = "DELETE FROM Movies WHERE Id = $id";
+        cmd.Parameters.AddWithValue("$id", id);
+        return cmd.ExecuteNonQuery() > 0;
+    }
 }

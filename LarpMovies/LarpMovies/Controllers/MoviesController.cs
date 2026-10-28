@@ -1,7 +1,6 @@
 ﻿using LarpMovies.Data;
 using LarpMovies.Models;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Data.Sqlite;
 
 namespace LarpMovies.Controllers;
 
@@ -11,14 +10,17 @@ public class MoviesController : Controller
 
     public MoviesController(IDatabase db) => _db = db;
 
+    // GET /Movies -> stranicata sas spisuka (tablicata se pulni ot JavaScript)
     public IActionResult Index() => View();
 
-    // JSON za JavaScript tablicata (filturut se pravi v brauzura).
+    // GET /Movies/List -> vsichki filmi kato JSON za movies.js (filturut e v brauzura)
     [HttpGet]
     public IActionResult List() => Json(_db.GetAll());
 
+    // GET /Movies/Create -> prazna forma
     public IActionResult Create() => View(new Movie { Year = DateTime.Now.Year });
 
+    // POST /Movies/Create -> proverka i zapis
     [HttpPost, ValidateAntiForgeryToken]
     public IActionResult Create(Movie movie)
     {
@@ -32,37 +34,18 @@ public class MoviesController : Controller
         return RedirectToAction(nameof(Index));
     }
 
-    [HttpPost, ValidateAntiForgeryToken]
-    public IActionResult Edit(int id, Movie movie)
+    // GET /Movies/Delete/5 -> stranica za potvurzhdenie (ne trie nishto)
+    public IActionResult Delete(int id) =>
+        _db.GetById(id) is { } movie ? View(movie) : NotFound();
+
+    // POST /Movies/Delete/5 -> realnoto iztrivane
+    [HttpPost, ActionName("Delete"), ValidateAntiForgeryToken]
+    public IActionResult DeleteConfirmed(int id)
     {
-        if (id != movie.Id)
+        if (_db.Delete(id))
         {
-            return NotFound();
+            TempData["Message"] = "Movie was deleted.";
         }
-
-        if (!(ModelState.IsValid || SaveMovie(() => _db.Edit(movie), movie)))
-        {
-            return View(movie);
-        }
-
-        _db.Edit(movie);
-        TempData["Message"] = $"Movie '{movie.Title}' was updated.";
         return RedirectToAction(nameof(Index));
-    }
-
-    //za prepravqne kogato ne e 3 chasa!!!!!!!!
-    //proverka pri edit da ne se update-vat ednakvi filmi ili pri create da nqma povtaracki
-    private bool SaveMovie(Action save, Movie movie)
-    {
-        try
-        {
-            save();
-            return true;
-        }
-        catch (SqliteException ex) 
-        {
-            ModelState.AddModelError(string.Empty, "it dont work like that sweetie");
-            return false;
-        }
     }
 }
