@@ -49,3 +49,5 @@ public class MoviesController : Controller
         return RedirectToAction(nameof(Index));
     }
 }
+
+//oh gospodi samo za do commitna kakvo napracih
