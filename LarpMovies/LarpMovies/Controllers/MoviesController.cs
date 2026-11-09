@@ -1,7 +1,6 @@
 ﻿using LarpMovies.Data;
 using LarpMovies.Models;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Data.Sqlite;
 
 namespace LarpMovies.Controllers;
 
@@ -11,14 +10,17 @@ public class MoviesController : Controller
 
     public MoviesController(IDatabase db) => _db = db;
 
+    // GET /Movies -> stranicata sas spisuka (tablicata se pulni ot JavaScript)
     public IActionResult Index() => View();
 
-    // JSON za JavaScript tablicata (filturut se pravi v brauzura).
+    // GET /Movies/List -> vsichki filmi kato JSON za movies.js (filturut e v brauzura)
     [HttpGet]
     public IActionResult List() => Json(_db.GetAll());
 
+    // GET /Movies/Create -> prazna forma
     public IActionResult Create() => View(new Movie { Year = DateTime.Now.Year });
 
+    // POST /Movies/Create -> proverka i zapis
     [HttpPost, ValidateAntiForgeryToken]
     public IActionResult Create(Movie movie)
     {
@@ -29,24 +31,6 @@ public class MoviesController : Controller
 
         _db.Add(movie);
         TempData["Message"] = $"Movie '{movie.Title}' was added.";
-        return RedirectToAction(nameof(Index));
-    }
-
-    [HttpPost, ValidateAntiForgeryToken]
-    public IActionResult Edit(int id, Movie movie)
-    {
-        if (id != movie.Id)
-        {
-            return NotFound();
-        }
-
-        if (!ModelState.IsValid) //proverkata se izvurshva pri uniquemovie klasa
-        {
-            return View(movie);
-        }
-
-        _db.Edit(movie);
-        TempData["Message"] = $"Movie '{movie.Title}' was updated.";
         return RedirectToAction(nameof(Index));
     }
 
@@ -82,3 +66,4 @@ public class MoviesController : Controller
     } */
 
 }
+
