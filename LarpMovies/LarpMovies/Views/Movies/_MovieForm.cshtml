@@ -10,9 +10,11 @@
         <span asp-validation-for="Title" class="text-danger small"></span>
     </div>
     <div class="col-md-6">
-        <label asp-for="Director" class="form-label"></label>
-        <input asp-for="Director" class="form-control" autocomplete="off" />
-        <span asp-validation-for="Director" class="text-danger small"></span>
+        <label asp-for="DirectorId" class="form-label">Director</label>
+        <select asp-for="DirectorId" asp-items="ViewBag.Directors" class="form-select">
+            <option value="0">-- Select director --</option>
+        </select>
+        <span asp-validation-for="DirectorId" class="text-danger small"></span>
     </div>
     <div class="col-md-4">
         <label asp-for="Year" class="form-label"></label>
@@ -20,9 +22,11 @@
         <span asp-validation-for="Year" class="text-danger small"></span>
     </div>
     <div class="col-md-4">
-        <label asp-for="Genre" class="form-label"></label>
-        <input asp-for="Genre" class="form-control" autocomplete="off" />
-        <span asp-validation-for="Genre" class="text-danger small"></span>
+        <label asp-for="GenreId" class="form-label">Genre</label>
+        <select asp-for="GenreId" asp-items="ViewBag.Genres" class="form-select">
+            <option value="0">-- Select genre --</option>
+        </select>
+        <span asp-validation-for="GenreId" class="text-danger small"></span>
     </div>
     <div class="col-md-4">
         <label asp-for="Rating" class="form-label"></label>

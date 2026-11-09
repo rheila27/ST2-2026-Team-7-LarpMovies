@@ -5,9 +5,19 @@ namespace LarpMovies.Data;
 
 public sealed class Database : IDatabase
 {
+    // 1) vmesto tekstove Director/Genre pazim samo klyuchove kum drugite tablici
     private const string InsertSql =
-        "INSERT INTO Movies (Title, Director, Year, Genre, Rating, Description, Actors) " +
-        "VALUES ($title, $director, $year, $genre, $rating, $description, $actors)";
+        "INSERT INTO Movies (Title, Year, Rating, Description, Actors, DirectorId, GenreId) " +
+        "VALUES ($title, $year, $rating, $description, $actors, $directorId, $genreId)";
+
+    // SELECT za filmite s JOIN, za da vzemem imenata na rejisyora i janra (redut na kolonite = indeksite v Map)
+    private const string MovieSelect = """
+        SELECT m.Id, m.Title, m.Year, m.Rating, m.Description, m.Actors,
+               m.DirectorId, m.GenreId, d.Name, g.Name
+        FROM Movies m
+        JOIN Directors d ON d.Id = m.DirectorId
+        JOIN Genres    g ON g.Id = m.GenreId
+        """;
 
     private static readonly object Lock = new();
     private static Database? _instance;
@@ -41,6 +51,12 @@ public sealed class Database : IDatabase
     {
         var connection = new SqliteConnection(_connectionString);
         connection.Open();
+
+        // 2) SQLite po podrazbirane ignorira FOREIGN KEY; nastroikata e za vsyaka vrazka otdelno
+        using var pragma = connection.CreateCommand();
+        pragma.CommandText = "PRAGMA foreign_keys = ON;";
+        pragma.ExecuteNonQuery();
+
         return connection;
     }
 
@@ -58,16 +74,31 @@ public sealed class Database : IDatabase
         using var connection = Open();
         using (var cmd = connection.CreateCommand())
         {
+            // 3) Genres i Directors se sazdavat PURVI, zashtoto Movies sochi kum tyah
+            // ON DELETE RESTRICT = bazata ne pozvolyava iztrivane na zhanr/rejisyor, dokato ima film s nego
             cmd.CommandText = """
+                CREATE TABLE IF NOT EXISTS Genres (
+                    Id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    Name TEXT NOT NULL UNIQUE
+                );
+
+                CREATE TABLE IF NOT EXISTS Directors (
+                    Id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    Name TEXT NOT NULL,
+                    Country TEXT NOT NULL DEFAULT ''
+                );
+
                 CREATE TABLE IF NOT EXISTS Movies (
                     Id INTEGER PRIMARY KEY AUTOINCREMENT,
                     Title TEXT NOT NULL,
-                    Director TEXT NOT NULL,
                     Year INTEGER NOT NULL,
-                    Genre TEXT NOT NULL,
                     Rating REAL NOT NULL,
                     Description TEXT NOT NULL DEFAULT '',
-                    Actors TEXT NOT NULL DEFAULT ''
+                    Actors TEXT NOT NULL DEFAULT '',
+                    DirectorId INTEGER NOT NULL,
+                    GenreId INTEGER NOT NULL,
+                    FOREIGN KEY (DirectorId) REFERENCES Directors(Id) ON DELETE RESTRICT,
+                    FOREIGN KEY (GenreId)    REFERENCES Genres(Id)    ON DELETE RESTRICT
                 );
                 """;
             cmd.ExecuteNonQuery();
@@ -79,76 +110,125 @@ public sealed class Database : IDatabase
         }
     }
 
-    // nqkolko primerni filma, za da ima ot kakvo da filtrirate
+    // 4) purvo zhanrove i rejisyori, posle filmite (te se nuzhdaят ot tyah)
     private static void Seed(SqliteConnection connection)
     {
-        var samples = new Movie[]
+        string[] genres = { "Sci-Fi", "Crime", "Thriller", "Animation", "Action", "Comedy", "Drama", "Horror" };
+
+        (string Name, string Country)[] directors =
         {
-            new() { Title = "Dune", Director = "Denis Villeneuve", Year = 2021, Genre = "Sci-Fi", Rating = 8.0,
-                    Description = "A young noble takes control of a desert planet and its precious spice.",
-                    Actors = "Timothee Chalamet, Zendaya, Rebecca Ferguson" },
-            new() { Title = "Inception", Director = "Christopher Nolan", Year = 2010, Genre = "Sci-Fi", Rating = 8.8,
-                    Description = "A thief enters dreams to plant an idea in a target's mind.",
-                    Actors = "Leonardo DiCaprio, Joseph Gordon-Levitt, Elliot Page" },
-            new() { Title = "The Godfather", Director = "Francis Ford Coppola", Year = 1972, Genre = "Crime", Rating = 9.2,
-                    Description = "The aging head of a crime family hands control to his reluctant son.",
-                    Actors = "Marlon Brando, Al Pacino, James Caan" },
-            new() { Title = "Parasite", Director = "Bong Joon-ho", Year = 2019, Genre = "Thriller", Rating = 8.5,
-                    Description = "A poor family schemes its way into the lives of a wealthy household.",
-                    Actors = "Song Kang-ho, Choi Woo-shik, Park So-dam" },
-            new() { Title = "Spirited Away", Director = "Hayao Miyazaki", Year = 2001, Genre = "Animation", Rating = 8.6,
-                    Description = "A girl wanders into a world of spirits and must work to free her parents.",
-                    Actors = "Rumi Hiiragi, Miyu Irino, Mari Natsuki" },
-            new() { Title = "Pulp Fiction", Director = "Quentin Tarantino", Year = 1994, Genre = "Crime", Rating = 8.9,
-                    Description = "Intertwined stories of hitmen, a boxer and a gangster's wife in Los Angeles.",
-                    Actors = "John Travolta, Samuel L. Jackson, Uma Thurman" }
+            ("Denis Villeneuve", "Canada"),
+            ("Christopher Nolan", "UK"),
+            ("Francis Ford Coppola", "USA"),
+            ("Bong Joon-ho", "South Korea"),
+            ("Hayao Miyazaki", "Japan"),
+            ("Quentin Tarantino", "USA")
+        };
+
+        // rejisyorut i zhanrut se podavat kato ime; Id-to se namira s poddavane (subquery) pri INSERT
+        var samples = new (string Title, string Director, int Year, string Genre, double Rating, string Description, string Actors)[]
+        {
+            ("Dune", "Denis Villeneuve", 2021, "Sci-Fi", 8.0,
+                "A young noble takes control of a desert planet and its precious spice.",
+                "Timothee Chalamet, Zendaya, Rebecca Ferguson"),
+            ("Inception", "Christopher Nolan", 2010, "Sci-Fi", 8.8,
+                "A thief enters dreams to plant an idea in a target's mind.",
+                "Leonardo DiCaprio, Joseph Gordon-Levitt, Elliot Page"),
+            ("The Godfather", "Francis Ford Coppola", 1972, "Crime", 9.2,
+                "The aging head of a crime family hands control to his reluctant son.",
+                "Marlon Brando, Al Pacino, James Caan"),
+            ("Parasite", "Bong Joon-ho", 2019, "Thriller", 8.5,
+                "A poor family schemes its way into the lives of a wealthy household.",
+                "Song Kang-ho, Choi Woo-shik, Park So-dam"),
+            ("Spirited Away", "Hayao Miyazaki", 2001, "Animation", 8.6,
+                "A girl wanders into a world of spirits and must work to free her parents.",
+                "Rumi Hiiragi, Miyu Irino, Mari Natsuki"),
+            ("Pulp Fiction", "Quentin Tarantino", 1994, "Crime", 8.9,
+                "Intertwined stories of hitmen, a boxer and a gangster's wife in Los Angeles.",
+                "John Travolta, Samuel L. Jackson, Uma Thurman")
         };
 
         using var tx = connection.BeginTransaction();
-        foreach (var movie in samples)
+
+        foreach (var g in genres)
         {
             using var cmd = connection.CreateCommand();
             cmd.Transaction = tx;
-            cmd.CommandText = InsertSql;
-            Bind(cmd, movie);
+            cmd.CommandText = "INSERT INTO Genres (Name) VALUES ($name)";
+            cmd.Parameters.AddWithValue("$name", g);
             cmd.ExecuteNonQuery();
         }
+
+        foreach (var d in directors)
+        {
+            using var cmd = connection.CreateCommand();
+            cmd.Transaction = tx;
+            cmd.CommandText = "INSERT INTO Directors (Name, Country) VALUES ($name, $country)";
+            cmd.Parameters.AddWithValue("$name", d.Name);
+            cmd.Parameters.AddWithValue("$country", d.Country);
+            cmd.ExecuteNonQuery();
+        }
+
+        foreach (var s in samples)
+        {
+            using var cmd = connection.CreateCommand();
+            cmd.Transaction = tx;
+            cmd.CommandText = """
+                INSERT INTO Movies (Title, Year, Rating, Description, Actors, DirectorId, GenreId)
+                VALUES ($title, $year, $rating, $description, $actors,
+                        (SELECT Id FROM Directors WHERE Name = $director),
+                        (SELECT Id FROM Genres WHERE Name = $genre))
+                """;
+            cmd.Parameters.AddWithValue("$title", s.Title);
+            cmd.Parameters.AddWithValue("$year", s.Year);
+            cmd.Parameters.AddWithValue("$rating", s.Rating);
+            cmd.Parameters.AddWithValue("$description", s.Description);
+            cmd.Parameters.AddWithValue("$actors", s.Actors);
+            cmd.Parameters.AddWithValue("$director", s.Director);
+            cmd.Parameters.AddWithValue("$genre", s.Genre);
+            cmd.ExecuteNonQuery();
+        }
+
         tx.Commit();
     }
 
-    // prevrushta edin red ot bazata v obekt Movie
+    // 5) prevrushta edin red ot MovieSelect v obekt Movie (indeksite sa po reda na kolonite v MovieSelect)
     private static Movie Map(SqliteDataReader r) => new()
     {
         Id = r.GetInt32(0),
         Title = r.GetString(1),
-        Director = r.GetString(2),
-        Year = r.GetInt32(3),
-        Genre = r.GetString(4),
-        Rating = r.GetDouble(5),
-        Description = r.IsDBNull(6) ? null : r.GetString(6),
-        Actors = r.IsDBNull(7) ? null : r.GetString(7)
+        Year = r.GetInt32(2),
+        Rating = r.GetDouble(3),
+        Description = r.IsDBNull(4) ? null : r.GetString(4),
+        Actors = r.IsDBNull(5) ? null : r.GetString(5),
+        DirectorId = r.GetInt32(6),
+        GenreId = r.GetInt32(7),
+        DirectorName = r.GetString(8),
+        GenreName = r.GetString(9)
     };
 
-    // slaga stoinostite na filma kato parametri (praznite neizbezhdani poleta stavat NULL)
+    // 6) slaga stoinostite na filma kato parametri (praznite neizbezhdani poleta stavat '')
     private static void Bind(SqliteCommand cmd, Movie m)
     {
         cmd.Parameters.AddWithValue("$title", m.Title.Trim());
-        cmd.Parameters.AddWithValue("$director", m.Director.Trim());
         cmd.Parameters.AddWithValue("$year", m.Year);
-        cmd.Parameters.AddWithValue("$genre", m.Genre.Trim());
         cmd.Parameters.AddWithValue("$rating", m.Rating);
         cmd.Parameters.AddWithValue("$description",
             string.IsNullOrWhiteSpace(m.Description) ? string.Empty : m.Description.Trim());
         cmd.Parameters.AddWithValue("$actors",
             string.IsNullOrWhiteSpace(m.Actors) ? string.Empty : m.Actors.Trim());
+        cmd.Parameters.AddWithValue("$directorId", m.DirectorId);
+        cmd.Parameters.AddWithValue("$genreId", m.GenreId);
     }
+
+    // ---------------- Movies ----------------
 
     // Select
     public IReadOnlyList<Movie> GetAll()
     {
         using var connection = Open();
         using var cmd = connection.CreateCommand();
-        cmd.CommandText = "SELECT Id, Title, Director, Year, Genre, Rating, Description, Actors FROM Movies ORDER BY Title COLLATE NOCASE";
+        cmd.CommandText = MovieSelect + " ORDER BY m.Title COLLATE NOCASE";
         using var reader = cmd.ExecuteReader();
         var result = new List<Movie>();
         while (reader.Read())
@@ -166,5 +246,144 @@ public sealed class Database : IDatabase
         cmd.CommandText = InsertSql + "; SELECT last_insert_rowid();";
         Bind(cmd, movie);
         return Convert.ToInt32(cmd.ExecuteScalar());
+    }
+
+    // ---------------- Genres ----------------
+
+    public IReadOnlyList<Genre> GetGenres()
+    {
+        using var connection = Open();
+        using var cmd = connection.CreateCommand();
+        cmd.CommandText = "SELECT Id, Name FROM Genres ORDER BY Name COLLATE NOCASE";
+        using var reader = cmd.ExecuteReader();
+        var result = new List<Genre>();
+        while (reader.Read())
+        {
+            result.Add(new Genre { Id = reader.GetInt32(0), Name = reader.GetString(1) });
+        }
+        return result;
+    }
+
+    public Genre? GetGenreById(int id)
+    {
+        using var connection = Open();
+        using var cmd = connection.CreateCommand();
+        cmd.CommandText = "SELECT Id, Name FROM Genres WHERE Id = $id";
+        cmd.Parameters.AddWithValue("$id", id);
+        using var reader = cmd.ExecuteReader();
+        return reader.Read() ? new Genre { Id = reader.GetInt32(0), Name = reader.GetString(1) } : null;
+    }
+
+    // hvurlq SqliteException, ako imeto veche sashtestvuva (UNIQUE) - kontrolerut go hvashta
+    public int AddGenre(Genre genre)
+    {
+        using var connection = Open();
+        using var cmd = connection.CreateCommand();
+        cmd.CommandText = "INSERT INTO Genres (Name) VALUES ($name); SELECT last_insert_rowid();";
+        cmd.Parameters.AddWithValue("$name", genre.Name.Trim());
+        return Convert.ToInt32(cmd.ExecuteScalar());
+    }
+
+    public bool UpdateGenre(Genre genre)
+    {
+        using var connection = Open();
+        using var cmd = connection.CreateCommand();
+        cmd.CommandText = "UPDATE Genres SET Name = $name WHERE Id = $id";
+        cmd.Parameters.AddWithValue("$name", genre.Name.Trim());
+        cmd.Parameters.AddWithValue("$id", genre.Id);
+        return cmd.ExecuteNonQuery() > 0;
+    }
+
+    public bool DeleteGenre(int id)
+    {
+        using var connection = Open();
+        using var cmd = connection.CreateCommand();
+        cmd.CommandText = "DELETE FROM Genres WHERE Id = $id";
+        cmd.Parameters.AddWithValue("$id", id);
+        return cmd.ExecuteNonQuery() > 0;
+    }
+
+    // ima li film s tozi zhanr (proverka predi iztrivane)
+    public bool GenreInUse(int id)
+    {
+        using var connection = Open();
+        using var cmd = connection.CreateCommand();
+        cmd.CommandText = "SELECT 1 FROM Movies WHERE GenreId = $id LIMIT 1";
+        cmd.Parameters.AddWithValue("$id", id);
+        return cmd.ExecuteScalar() is not null;
+    }
+
+    // ---------------- Directors ----------------
+
+    private static Director MapDirector(SqliteDataReader r) => new()
+    {
+        Id = r.GetInt32(0),
+        Name = r.GetString(1),
+        Country = r.IsDBNull(2) ? null : r.GetString(2)
+    };
+
+    public IReadOnlyList<Director> GetDirectors()
+    {
+        using var connection = Open();
+        using var cmd = connection.CreateCommand();
+        cmd.CommandText = "SELECT Id, Name, Country FROM Directors ORDER BY Name COLLATE NOCASE";
+        using var reader = cmd.ExecuteReader();
+        var result = new List<Director>();
+        while (reader.Read())
+        {
+            result.Add(MapDirector(reader));
+        }
+        return result;
+    }
+
+    public Director? GetDirectorById(int id)
+    {
+        using var connection = Open();
+        using var cmd = connection.CreateCommand();
+        cmd.CommandText = "SELECT Id, Name, Country FROM Directors WHERE Id = $id";
+        cmd.Parameters.AddWithValue("$id", id);
+        using var reader = cmd.ExecuteReader();
+        return reader.Read() ? MapDirector(reader) : null;
+    }
+
+    public int AddDirector(Director director)
+    {
+        using var connection = Open();
+        using var cmd = connection.CreateCommand();
+        cmd.CommandText = "INSERT INTO Directors (Name, Country) VALUES ($name, $country); SELECT last_insert_rowid();";
+        cmd.Parameters.AddWithValue("$name", director.Name.Trim());
+        cmd.Parameters.AddWithValue("$country",
+            string.IsNullOrWhiteSpace(director.Country) ? string.Empty : director.Country.Trim());
+        return Convert.ToInt32(cmd.ExecuteScalar());
+    }
+
+    public bool UpdateDirector(Director director)
+    {
+        using var connection = Open();
+        using var cmd = connection.CreateCommand();
+        cmd.CommandText = "UPDATE Directors SET Name = $name, Country = $country WHERE Id = $id";
+        cmd.Parameters.AddWithValue("$name", director.Name.Trim());
+        cmd.Parameters.AddWithValue("$country",
+            string.IsNullOrWhiteSpace(director.Country) ? string.Empty : director.Country.Trim());
+        cmd.Parameters.AddWithValue("$id", director.Id);
+        return cmd.ExecuteNonQuery() > 0;
+    }
+
+    public bool DeleteDirector(int id)
+    {
+        using var connection = Open();
+        using var cmd = connection.CreateCommand();
+        cmd.CommandText = "DELETE FROM Directors WHERE Id = $id";
+        cmd.Parameters.AddWithValue("$id", id);
+        return cmd.ExecuteNonQuery() > 0;
+    }
+
+    public bool DirectorInUse(int id)
+    {
+        using var connection = Open();
+        using var cmd = connection.CreateCommand();
+        cmd.CommandText = "SELECT 1 FROM Movies WHERE DirectorId = $id LIMIT 1";
+        cmd.Parameters.AddWithValue("$id", id);
+        return cmd.ExecuteScalar() is not null;
     }
 }
