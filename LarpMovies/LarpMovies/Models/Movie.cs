@@ -6,6 +6,8 @@ public class Movie
 {
     public int Id { get; set; }
 
+    public string? Director { get; set; } // vseki film ima direktor 
+
     [Required(ErrorMessage = "Title is required.")]
     [StringLength(100, MinimumLength = 2, ErrorMessage = "Title must be 2 to 100 characters.")]
     public string Title { get; set; } = ""; //za da go chete prazen tekst a ne nujll, ne moje null gorl
