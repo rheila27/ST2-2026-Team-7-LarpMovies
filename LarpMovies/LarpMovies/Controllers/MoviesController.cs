@@ -19,7 +19,7 @@ public class MoviesController : Controller
     public IActionResult List() => Json(_db.GetAll());
 
     // GET /Movies/Create -> prazna forma
-    
+    public IActionResult Create() => View(new Movie { Year = DateTime.Now.Year });
 
     // POST /Movies/Create -> proverka i zapis
     [HttpPost, ValidateAntiForgeryToken]
@@ -27,7 +27,6 @@ public class MoviesController : Controller
     {
         if(!ModelState.IsValid)
         {
-            LoadLists(movie.DirectorId, movie.GenreId);
             return View(movie);
         }
 
