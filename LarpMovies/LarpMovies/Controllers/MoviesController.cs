@@ -40,7 +40,7 @@ public class MoviesController : Controller
             return NotFound();
         }
 
-        if (!(ModelState.IsValid || SaveMovie(() => _db.Edit(movie), movie)))
+        if (!ModelState.IsValid) //proverkata se izvurshva pri uniquemovie klasa
         {
             return View(movie);
         }
@@ -50,19 +50,35 @@ public class MoviesController : Controller
         return RedirectToAction(nameof(Index));
     }
 
-    //za prepravqne kogato ne e 3 chasa!!!!!!!!
-    //proverka pri edit da ne se update-vat ednakvi filmi ili pri create da nqma povtaracki
-    private bool SaveMovie(Action save, Movie movie)
+    //iztrivane za UI, potrebitelqt potvurjdava
+    [HttpGet]
+    public IActionResult Delete(int id)
     {
-        try
-        {
-            save();
-            return true;
-        }
-        catch (SqliteException ex) 
-        {
-            ModelState.AddModelError(string.Empty, "it dont work like that sweetie");
-            return false;
-        }
+        var movie = _db.GetById(id);
+        return movie is null ? NotFound() : View(movie);
     }
+
+    // iztrivane ot bazata
+    [HttpPost, ActionName("Delete"), ValidateAntiForgeryToken]
+    public IActionResult DeleteMovie(int id)
+    {
+        if (!_db.Delete(id))
+        {
+            return NotFound();
+        }
+
+        TempData["Message"] = "Movie deleted successfully.";
+        return RedirectToAction(nameof(Index));
+    }
+
+    /*public IActionResult Edit(int id)
+    {
+        var movie = _db.GetAll().FirstOrDefault(m => m.Id == id);
+        if (movie is null)
+        {
+            return NotFound();
+        }
+        return View(movie);
+    } */
+
 }

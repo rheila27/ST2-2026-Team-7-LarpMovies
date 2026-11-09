@@ -8,6 +8,8 @@ public interface IDatabase
     int Add(Movie movie);
 
     bool Edit(Movie movie);
+    bool Delete(int id);
+    Movie? GetById(int id);
 
     //za tova da ne se povtarqt filmi
     bool TitleExists(string title, int bezId = 0);

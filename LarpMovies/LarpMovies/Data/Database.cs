@@ -182,7 +182,25 @@ public sealed class Database : IDatabase
         return cmd.ExecuteNonQuery() > 0;
     }
 
+    public bool Delete(int id)
+    {
+        using var connection = Open();
+        using var cmd = connection.CreateCommand();
+        cmd.CommandText = "DELETE FROM Movies WHERE Id = $id";
+        cmd.Parameters.AddWithValue("$id", id);
+        return cmd.ExecuteNonQuery() > 0;
+    }
 
+    //vrushta detaili samo za edin film
+    public Movie? GetById(int id) 
+    {
+        using var connection = Open();
+        using var cmd = connection.CreateCommand();
+        cmd.CommandText = "SELECT Id, Title, Director, Year, Genre, Rating, Description, Actors FROM Movies WHERE Id = $id";
+        cmd.Parameters.AddWithValue("$id", id);
+        using var reader = cmd.ExecuteReader();
+        return reader.Read() ? Map(reader) : null;
+    }
 
 
 
