@@ -84,5 +84,15 @@ public class MoviesController : Controller
         TempData["Message"] = "Movie deleted successfully.";
         return RedirectToAction(nameof(Index));
     }
+
+    // GET /Movies/Details/5 -> pokazva detalite za filmite :)
+    [HttpGet]
+    public IActionResult Details(int id)
+    {
+        var movie = _db.GetById(id);
+        return movie is null ? NotFound() : View(movie);
+    }
+
+
 }
 
