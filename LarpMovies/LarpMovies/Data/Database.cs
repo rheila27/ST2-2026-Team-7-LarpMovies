@@ -344,7 +344,10 @@ public sealed class Database : IDatabase
     {
         using var connection = Open();
         using var cmd = connection.CreateCommand();
-        cmd.CommandText = "DELETE FROM Genres WHERE Id = $id"; }
+        cmd.CommandText = "DELETE FROM Genres WHERE Id = $id";
+        cmd.Parameters.AddWithValue("$id", id);
+        return cmd.ExecuteNonQuery() > 0;
+    }
   
 
  
