@@ -14,8 +14,7 @@
     const state = { all: [], filtered: [], terms: [] };
 
     // Poletata, po koito se tursi (tochno tezi, koito se vizhdat v tablicata).
-    const fields = ['id', 'title', 'director', 'year', 'genre', 'rating', 'actors'];
-
+    const fields = ['id', 'title', 'directorId', 'year', 'genreId', 'rating', 'actors'];
     const escapeRegExp = s => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
     const norm = v => (v ?? '').toString().toLowerCase();
 
