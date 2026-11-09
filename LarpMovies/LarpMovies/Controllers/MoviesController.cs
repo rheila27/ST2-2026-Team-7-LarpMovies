@@ -1,6 +1,7 @@
 ﻿using LarpMovies.Data;
 using LarpMovies.Models;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Rendering;
 
 namespace LarpMovies.Controllers;
 
@@ -18,14 +19,15 @@ public class MoviesController : Controller
     public IActionResult List() => Json(_db.GetAll());
 
     // GET /Movies/Create -> prazna forma
-    public IActionResult Create() => View(new Movie { Year = DateTime.Now.Year });
+    
 
     // POST /Movies/Create -> proverka i zapis
     [HttpPost, ValidateAntiForgeryToken]
     public IActionResult Create(Movie movie)
     {
-        if (!ModelState.IsValid)
+        if(!ModelState.IsValid)
         {
+            LoadLists(movie.DirectorId, movie.GenreId);
             return View(movie);
         }
 
@@ -53,6 +55,22 @@ public class MoviesController : Controller
 
         TempData["Message"] = "Movie deleted successfully.";
         return RedirectToAction(nameof(Index));
+    }
+
+    // pulni padashtite menyuta s rejisyori i zhanrove ot bazata
+    private void LoadLists(int? selectedDirector = null, int? selectedGenre = null)
+    {
+        ViewBag.Directors = new SelectList(_db.GetDirectors(), "Id", "Name", selectedDirector);
+        ViewBag.Genres = new SelectList(_db.GetGenres(), "Id", "Name", selectedGenre);
+    }
+ 
+    // Edit GET: избира текущите стойности на филма
+    public IActionResult Edit(int id)
+    {
+        var movie = _db.GetById(id);
+        if (movie is null) return NotFound();
+        LoadLists(movie.DirectorId, movie.GenreId);
+        return View(movie);
     }
 
     /*public IActionResult Edit(int id)
