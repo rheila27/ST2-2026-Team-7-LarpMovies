@@ -14,7 +14,7 @@
     const state = { all: [], filtered: [], terms: [] };
 
     // Poletata, po koito se tursi (tochno tezi, koito se vizhdat v tablicata).
-    const fields = ['id', 'title', 'directorId', 'year', 'genreId', 'rating', 'actors'];
+    const fields = ['id', 'title', 'directorName', 'year', 'genreName', 'rating', 'actors'];
     const escapeRegExp = s => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
     const norm = v => (v ?? '').toString().toLowerCase();
 
@@ -69,9 +69,9 @@
             const tr = document.createElement('tr');
             cell(tr, m.id);
             cell(tr, m.title);
-            cell(tr, m.director);
+            cell(tr, m.directorName);
             cell(tr, m.year);
-            cell(tr, m.genre);
+            cell(tr, m.genreName);
             cell(tr, m.rating);
             cell(tr, m.actors);
             const tdActions = document.createElement('td');
@@ -79,7 +79,7 @@
             tdActions.innerHTML = `
                 <a href="/Movies/Edit/${m.id}" class="btn btn-sm btn-outline-primary me-1">Edit</a>
                 <a href="/Movies/Details/${m.id}" class="btn btn-sm btn-outline-info me-1">Details</a>
-                <a href="/Movies/Delete/${m.id}" class="btn btn-sm btn-outline-danger">Delete</a>   
+                <a href="/Movies/Delete/${m.id}" class="btn btn-sm btn-outline-danger">Delete</a>
             `;
             tr.appendChild(tdActions); // tova sled cell (tr, m.actors) dobavq edit, detail i delete butoni istfg)
             els.body.appendChild(tr);
@@ -107,7 +107,7 @@
             els.body.replaceChildren();
             const tr = document.createElement('tr');
             const td = document.createElement('td');
-            td.colSpan = 7;
+            td.colSpan = 8;
             td.className = 'text-center text-danger py-4';
             td.textContent = 'Error loading the movies.';
             tr.appendChild(td);
