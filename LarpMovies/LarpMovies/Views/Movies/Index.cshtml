@@ -7,7 +7,9 @@
     <a asp-action="Create" class="btn btn-primary">+ New movie</a>
 </div>
 
-<div class="card shadow-sm" id="movies-app" data-list-url="@Url.Action("List")">
+<div class="card shadow-sm" id="movies-app" data-list-url="@Url.Action("List")"
+     data-edit-url="@Url.Action("Edit")"
+     data-delete-url="@Url.Action("Delete")">
     <div class="card-body">
         <div class="input-group mb-3">
             <span class="input-group-text">&#128269;</span>
@@ -26,10 +28,11 @@
                         <th>Genre</th>
                         <th>Rating</th>
                         <th>Actors</th>
+                        <th class="text-end">Actions</th>
                     </tr>
                 </thead>
                 <tbody id="movies-body">
-                    <tr><td colspan="7" class="text-center text-muted py-4">Loading...</td></tr>
+                    <tr><td colspan="8" class="text-center text-muted py-4">Loading...</td></tr>
                 </tbody>
             </table>
         </div>

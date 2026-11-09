@@ -59,7 +59,7 @@
         if (!rows.length) {
             const tr = document.createElement('tr');
             const td = document.createElement('td');
-            td.colSpan = 7;
+            td.colSpan = 8;
             td.className = 'text-center text-muted py-4';
             td.textContent = state.all.length ? 'No movies match your search.' : 'There are no movies yet.';
             tr.appendChild(td);
