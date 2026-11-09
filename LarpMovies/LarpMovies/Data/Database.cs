@@ -72,6 +72,25 @@ public sealed class Database : IDatabase
         var isNewFile = !File.Exists(builder.DataSource);
 
         using var connection = Open();
+
+        // dev-migraciya: ako Movies e ot starata shema (nyama kolona DirectorId), triem tablicata i ya sazdavame nanovo
+        long cols, hasDirectorId;
+        using (var check = connection.CreateCommand())
+        {
+            check.CommandText = "SELECT COUNT(*), COALESCE(SUM(name = 'DirectorId'), 0) FROM pragma_table_info('Movies')";
+            using var r = check.ExecuteReader();
+            r.Read();
+            cols = r.GetInt64(0);
+            hasDirectorId = r.GetInt64(1);
+        }
+        var oldSchema = cols > 0 && hasDirectorId == 0;
+
+        if (oldSchema)
+        {
+            using var drop = connection.CreateCommand();
+            drop.CommandText = "DROP TABLE Movies;";
+            drop.ExecuteNonQuery();
+        }
         using (var cmd = connection.CreateCommand())
         {
             // 3) Genres i Directors se sazdavat PURVI, zashtoto Movies sochi kum tyah
@@ -104,7 +123,7 @@ public sealed class Database : IDatabase
             cmd.ExecuteNonQuery();
         }
 
-        if (isNewFile)
+        if (isNewFile || oldSchema)   // <-- tuk e promenenoto uslovie
         {
             Seed(connection);
         }
@@ -253,10 +272,12 @@ public sealed class Database : IDatabase
         using var connection = Open();
         using var cmd = connection.CreateCommand();
         cmd.CommandText = """
-            UPDATE Movies
-            SET Title = $title, Director = $director, Year = $year, Genre = $genre, Rating = $rating, Description = $description, Actors = $actors
-            WHERE Id = $id
-            """;
+        UPDATE Movies
+        SET Title = $title, Year = $year, Rating = $rating,
+            Description = $description, Actors = $actors,
+            DirectorId = $directorId, GenreId = $genreId
+        WHERE Id = $id
+        """;
         Bind(cmd, movie);
         cmd.Parameters.AddWithValue("$id", movie.Id);
         return cmd.ExecuteNonQuery() > 0;
@@ -276,7 +297,7 @@ public sealed class Database : IDatabase
     {
         using var connection = Open();
         using var cmd = connection.CreateCommand();
-        cmd.CommandText = "SELECT Id, Title, Director, Year, Genre, Rating, Description, Actors FROM Movies WHERE Id = $id";
+        cmd.CommandText = MovieSelect + " WHERE m.Id = $id";
         cmd.Parameters.AddWithValue("$id", id);
         using var reader = cmd.ExecuteReader();
         return reader.Read() ? Map(reader) : null;
@@ -284,14 +305,26 @@ public sealed class Database : IDatabase
 
 
 
+    // ima li drug film s sustoto zaglavie (bezId = pri redakciya ne se broi samiyat film)
     public bool TitleExists(string title, int bezId = 0)
     {
-        throw new NotImplementedException();
+        using var connection = Open();
+        using var cmd = connection.CreateCommand();
+        cmd.CommandText = "SELECT 1 FROM Movies WHERE Title = $title COLLATE NOCASE AND Id <> $id LIMIT 1";
+        cmd.Parameters.AddWithValue("$title", title.Trim());
+        cmd.Parameters.AddWithValue("$id", bezId);
+        return cmd.ExecuteScalar() is not null;
     }
 
-    public bool DirectorExists(string director, int bezId = 0)
+    // ima li drug rejisyor s sushtoto ime v tablica Directors
+    public bool DirectorExists(string name, int bezId = 0)
     {
-        throw new NotImplementedException();
+        using var connection = Open();
+        using var cmd = connection.CreateCommand();
+        cmd.CommandText = "SELECT 1 FROM Directors WHERE Name = $name COLLATE NOCASE AND Id <> $id LIMIT 1";
+        cmd.Parameters.AddWithValue("$name", name.Trim());
+        cmd.Parameters.AddWithValue("$id", bezId);
+        return cmd.ExecuteScalar() is not null;
     }
 
     // ---------------- Genres ----------------
