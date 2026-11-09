@@ -52,6 +52,17 @@ public class MoviesController : Controller
         return RedirectToAction(nameof(Index));
     }
 
+    [HttpGet]
+    public IActionResult Edit(int id)
+    {
+        var movie = _db.GetAll().FirstOrDefault(m => m.Id == id);
+        if (movie is null)
+        {
+            return NotFound();
+        }
+        return View(movie);
+    }
+
     //iztrivane za UI, potrebitelqt potvurjdava
     [HttpGet]
     public IActionResult Delete(int id)
@@ -72,16 +83,5 @@ public class MoviesController : Controller
         TempData["Message"] = "Movie deleted successfully.";
         return RedirectToAction(nameof(Index));
     }
-
-    /*public IActionResult Edit(int id)
-    {
-        var movie = _db.GetAll().FirstOrDefault(m => m.Id == id);
-        if (movie is null)
-        {
-            return NotFound();
-        }
-        return View(movie);
-    } */
-
 }
 
