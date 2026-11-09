@@ -19,7 +19,7 @@ public class MoviesController : Controller
     public IActionResult List() => Json(_db.GetAll());
 
     // GET /Movies/Create -> prazna forma
-    
+    public IActionResult Create() => View(new Movie { Year = DateTime.Now.Year });
 
     // POST /Movies/Create -> proverka i zapis
     [HttpPost, ValidateAntiForgeryToken]
@@ -27,30 +27,12 @@ public class MoviesController : Controller
     {
         if(!ModelState.IsValid)
         {
-            LoadLists(movie.DirectorId, movie.GenreId);
+            //LoadLists(movie.DirectorId, movie.GenreId);
             return View(movie);
         }
 
         _db.Add(movie);
         TempData["Message"] = $"Movie '{movie.Title}' was added.";
-        return RedirectToAction(nameof(Index));
-    }
-
-    [HttpPost, ValidateAntiForgeryToken]
-    public IActionResult Edit(int id, Movie movie)
-    {
-        if (id != movie.Id)
-        {
-            return NotFound();
-        }
-
-        if (!ModelState.IsValid) //proverkata se izvurshva pri uniquemovie klasa
-        {
-            return View(movie);
-        }
-
-        _db.Edit(movie);
-        TempData["Message"] = $"Movie '{movie.Title}' was updated.";
         return RedirectToAction(nameof(Index));
     }
 
@@ -75,21 +57,7 @@ public class MoviesController : Controller
         return RedirectToAction(nameof(Index));
     }
 
-    // pulni padashtite menyuta s rejisyori i zhanrove ot bazata
-    private void LoadLists(int? selectedDirector = null, int? selectedGenre = null)
-    {
-        ViewBag.Directors = new SelectList(_db.GetDirectors(), "Id", "Name", selectedDirector);
-        ViewBag.Genres = new SelectList(_db.GetGenres(), "Id", "Name", selectedGenre);
-    }
- 
-    // Edit GET: избира текущите стойности на филма
-    public IActionResult Edit(int id)
-    {
-        var movie = _db.GetById(id);
-        if (movie is null) return NotFound();
-        LoadLists(movie.DirectorId, movie.GenreId);
-        return View(movie);
-    }
+    
 
     /*public IActionResult Edit(int id)
     {

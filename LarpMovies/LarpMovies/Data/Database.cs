@@ -261,6 +261,11 @@ public sealed class Database : IDatabase
     public int Add(Movie movie)
     {
         using var connection = Open();
+
+        // potrebitelyat pishe imenata; tuk gi prevrushtame v Id (namirame sushtestvuvashto ili suzdavame novo)
+        movie.DirectorId = GetOrCreateId(connection, "Directors", movie.DirectorName);
+        movie.GenreId = GetOrCreateId(connection, "Genres", movie.GenreName);
+
         using var cmd = connection.CreateCommand();
         cmd.CommandText = InsertSql + "; SELECT last_insert_rowid();";
         Bind(cmd, movie);
@@ -270,6 +275,10 @@ public sealed class Database : IDatabase
     public bool Edit(Movie movie)
     {
         using var connection = Open();
+
+        movie.DirectorId = GetOrCreateId(connection, "Directors", movie.DirectorName);
+        movie.GenreId = GetOrCreateId(connection, "Genres", movie.GenreName);
+
         using var cmd = connection.CreateCommand();
         cmd.CommandText = """
         UPDATE Movies
@@ -466,5 +475,27 @@ public sealed class Database : IDatabase
         cmd.CommandText = "SELECT 1 FROM Movies WHERE DirectorId = $id LIMIT 1";
         cmd.Parameters.AddWithValue("$id", id);
         return cmd.ExecuteScalar() is not null; }
-   
+
+    // namira zapis po ime (bez znachenie ot registura za latinica); ako go nyama, go suzdava i vrushta Id-to
+    // table idva samo ot vutreshni konstanti ("Genres"/"Directors"), imeto vinagi e parametur
+    private static int GetOrCreateId(SqliteConnection connection, string table, string name)
+    {
+        name = name.Trim();
+
+        using (var find = connection.CreateCommand())
+        {
+            find.CommandText = $"SELECT Id FROM {table} WHERE Name = $name COLLATE NOCASE LIMIT 1";
+            find.Parameters.AddWithValue("$name", name);
+            if (find.ExecuteScalar() is long existingId)
+            {
+                return (int)existingId;
+            }
+        }
+
+        using var insert = connection.CreateCommand();
+        insert.CommandText = $"INSERT INTO {table} (Name) VALUES ($name); SELECT last_insert_rowid();";
+        insert.Parameters.AddWithValue("$name", name);
+        return Convert.ToInt32(insert.ExecuteScalar());
+    }
+
 }
