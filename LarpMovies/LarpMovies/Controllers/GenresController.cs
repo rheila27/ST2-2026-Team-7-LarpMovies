@@ -55,12 +55,8 @@ public class GenresController : Controller
     [HttpGet]
     public IActionResult Edit(int id)
     {
-        var movie = _db.GetAll().FirstOrDefault(m => m.Id == id);
-        if (movie is null)
-        {
-            return NotFound();
-        }
-        return View(movie);
+        var genre = _db.GetGenreById(id);
+        return genre is null ? NotFound() : View(genre);
     }
 
     //iztrivane za UI, potrebitelqt potvurjdava

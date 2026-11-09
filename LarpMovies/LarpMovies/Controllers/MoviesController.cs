@@ -56,12 +56,8 @@ public class MoviesController : Controller
     [HttpGet]
     public IActionResult Edit(int id)
     {
-        var movie = _db.GetAll().FirstOrDefault(m => m.Id == id);
-        if (movie is null)
-        {
-            return NotFound();
-        }
-        return View(movie);
+        var movie = _db.GetById(id);
+        return movie is null ? NotFound() : View(movie);
     }
 
     //iztrivane za UI, potrebitelqt potvurjdava
