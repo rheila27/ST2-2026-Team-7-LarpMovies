@@ -75,7 +75,7 @@
             cell(tr, m.rating);
             cell(tr, m.actors);
             const tdActions = document.createElement('td');
-            tdActions.className = 'text-end';
+            tdActions.className = 'text-end text-nowrap'; // za da ne se raztega kolona s butonite 
             tdActions.innerHTML = `
                 <a href="/Movies/Edit/${m.id}" class="btn btn-sm btn-outline-primary me-1">Edit</a>
                 <a href="/Movies/Details/${m.id}" class="btn btn-sm btn-outline-info me-1">Details</a>
