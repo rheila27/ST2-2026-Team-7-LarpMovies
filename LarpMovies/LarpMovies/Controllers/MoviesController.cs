@@ -27,13 +27,41 @@ public class MoviesController : Controller
     {
         if(!ModelState.IsValid)
         {
-            //LoadLists(movie.DirectorId, movie.GenreId);
             return View(movie);
         }
 
         _db.Add(movie);
         TempData["Message"] = $"Movie '{movie.Title}' was added.";
         return RedirectToAction(nameof(Index));
+    }
+
+    [HttpPost, ValidateAntiForgeryToken]
+    public IActionResult Edit(int id, Movie movie)
+    {
+        if (id != movie.Id)
+        {
+            return NotFound();
+        }
+
+        if (!ModelState.IsValid) //proverkata se izvurshva pri uniquemovie klasa
+        {
+            return View(movie);
+        }
+
+        _db.Edit(movie);
+        TempData["Message"] = $"Movie '{movie.Title}' was updated.";
+        return RedirectToAction(nameof(Index));
+    }
+
+    [HttpGet]
+    public IActionResult Edit(int id)
+    {
+        var movie = _db.GetAll().FirstOrDefault(m => m.Id == id);
+        if (movie is null)
+        {
+            return NotFound();
+        }
+        return View(movie);
     }
 
     //iztrivane za UI, potrebitelqt potvurjdava
@@ -57,17 +85,14 @@ public class MoviesController : Controller
         return RedirectToAction(nameof(Index));
     }
 
-    
-
-    /*public IActionResult Edit(int id)
+    // GET /Movies/Details/5 -> pokazva detalite za filmite :)
+    [HttpGet]
+    public IActionResult Details(int id)
     {
-        var movie = _db.GetAll().FirstOrDefault(m => m.Id == id);
-        if (movie is null)
-        {
-            return NotFound();
-        }
-        return View(movie);
-    } */
+        var movie = _db.GetById(id);
+        return movie is null ? NotFound() : View(movie);
+    }
+
 
 }
 
