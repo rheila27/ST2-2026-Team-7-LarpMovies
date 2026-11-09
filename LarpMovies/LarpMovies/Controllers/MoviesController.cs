@@ -10,14 +10,17 @@ public class MoviesController : Controller
 
     public MoviesController(IDatabase db) => _db = db;
 
+    // GET /Movies -> stranicata sas spisuka (tablicata se pulni ot JavaScript)
     public IActionResult Index() => View();
-    
-    // JSON za JavaScript tablicata (filturut se pravi v brauzura).
+
+    // GET /Movies/List -> vsichki filmi kato JSON za movies.js (filturut e v brauzura)
     [HttpGet]
     public IActionResult List() => Json(_db.GetAll());
 
+    // GET /Movies/Create -> prazna forma
     public IActionResult Create() => View(new Movie { Year = DateTime.Now.Year });
 
+    // POST /Movies/Create -> proverka i zapis
     [HttpPost, ValidateAntiForgeryToken]
     public IActionResult Create(Movie movie)
     {
@@ -30,4 +33,37 @@ public class MoviesController : Controller
         TempData["Message"] = $"Movie '{movie.Title}' was added.";
         return RedirectToAction(nameof(Index));
     }
+
+    //iztrivane za UI, potrebitelqt potvurjdava
+    [HttpGet]
+    public IActionResult Delete(int id)
+    {
+        var movie = _db.GetById(id);
+        return movie is null ? NotFound() : View(movie);
+    }
+
+    // iztrivane ot bazata
+    [HttpPost, ActionName("Delete"), ValidateAntiForgeryToken]
+    public IActionResult DeleteMovie(int id)
+    {
+        if (!_db.Delete(id))
+        {
+            return NotFound();
+        }
+
+        TempData["Message"] = "Movie deleted successfully.";
+        return RedirectToAction(nameof(Index));
+    }
+
+    /*public IActionResult Edit(int id)
+    {
+        var movie = _db.GetAll().FirstOrDefault(m => m.Id == id);
+        if (movie is null)
+        {
+            return NotFound();
+        }
+        return View(movie);
+    } */
+
 }
+
