@@ -34,6 +34,24 @@ public class MoviesController : Controller
         return RedirectToAction(nameof(Index));
     }
 
+    [HttpPost, ValidateAntiForgeryToken]
+    public IActionResult Edit(int id, Movie movie)
+    {
+        if (id != movie.Id)
+        {
+            return NotFound();
+        }
+
+        if (!ModelState.IsValid) //proverkata se izvurshva pri uniquemovie klasa
+        {
+            return View(movie);
+        }
+
+        _db.Edit(movie);
+        TempData["Message"] = $"Movie '{movie.Title}' was updated.";
+        return RedirectToAction(nameof(Index));
+    }
+
     //iztrivane za UI, potrebitelqt potvurjdava
     [HttpGet]
     public IActionResult Delete(int id)
