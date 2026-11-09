@@ -1,5 +1,4 @@
 ﻿using LarpMovies.Models;
-using Microsoft.Extensions.Validation;
 using System.ComponentModel.DataAnnotations;
 
 namespace LarpMovies.Data
@@ -20,13 +19,12 @@ namespace LarpMovies.Data
 
             var db = valid.GetService(typeof(IDatabase)) as IDatabase ?? Database.Instance;
 
-            // Взимаме Id-то динамично (работи и за Movie, и за Director)
+            // Взимаме Id от инстанцията на обекта, а НЕ от свойството
             int bezId = 0;
-            var idProp = valid.ObjectType.GetProperty("Id");
-            if (idProp != null)
+            if (valid.ObjectInstance != null)
             {
-                var val = idProp.GetValue(valid.ObjectInstance);
-                if (val is int intId)
+                var idProp = valid.ObjectInstance.GetType().GetProperty("Id");
+                if (idProp?.GetValue(valid.ObjectInstance) is int intId)
                 {
                     bezId = intId;
                 }

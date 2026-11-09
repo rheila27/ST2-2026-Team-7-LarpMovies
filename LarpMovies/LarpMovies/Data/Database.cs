@@ -262,7 +262,6 @@ public sealed class Database : IDatabase
     {
         using var connection = Open();
 
-        // potrebitelyat pishe imenata; tuk gi prevrushtame v Id (namirame sushtestvuvashto ili suzdavame novo)
         movie.DirectorId = GetOrCreateId(connection, "Directors", movie.DirectorName);
         movie.GenreId = GetOrCreateId(connection, "Genres", movie.GenreName);
 
@@ -283,8 +282,8 @@ public sealed class Database : IDatabase
         cmd.CommandText = """
         UPDATE Movies
         SET Title = $title, Year = $year, Rating = $rating,
-            Description = $description, Actors = $actors,
-            DirectorId = $directorId, GenreId = $genreId
+        Description = $description, Actors = $actors,
+        DirectorId = $directorId, GenreId = $genreId
         WHERE Id = $id
         """;
         Bind(cmd, movie);
@@ -480,6 +479,11 @@ public sealed class Database : IDatabase
     // table idva samo ot vutreshni konstanti ("Genres"/"Directors"), imeto vinagi e parametur
     private static int GetOrCreateId(SqliteConnection connection, string table, string name)
     {
+        if (string.IsNullOrWhiteSpace(name))
+        {
+            name = "Unknown";
+        }
+
         name = name.Trim();
 
         using (var find = connection.CreateCommand())
