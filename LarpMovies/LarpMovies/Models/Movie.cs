@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations; //za da imame required i range nagotovo
+﻿using System.ComponentModel.DataAnnotations;
+using LarpMovies.Data; 
 
 namespace LarpMovies.Models;
 
@@ -10,6 +11,7 @@ public class Movie
 
     [Required(ErrorMessage = "Title is required.")]
     [StringLength(100, MinimumLength = 2, ErrorMessage = "Title must be 2 to 100 characters.")]
+    [UniqueMovieTitle]
     public string Title { get; set; } = ""; //za da go chete prazen tekst a ne nujll, ne moje null gorl
 
     // vutreshni klyuchove za Movies.

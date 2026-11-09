@@ -55,12 +55,8 @@ public class DirectorsController : Controller
     [HttpGet]
     public IActionResult Edit(int id)
     {
-        var movie = _db.GetAll().FirstOrDefault(m => m.Id == id);
-        if (movie is null)
-        {
-            return NotFound();
-        }
-        return View(movie);
+        var director = _db.GetDirectorById(id);
+        return director is null ? NotFound() : View(director);
     }
 
     //iztrivane za UI, potrebitelqt potvurjdava
