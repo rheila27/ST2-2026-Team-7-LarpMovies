@@ -1,4 +1,4 @@
-using LarpMovies.Models;
+﻿using LarpMovies.Models;
 using Microsoft.Data.Sqlite;
 
 namespace LarpMovies.Data;
@@ -248,6 +248,52 @@ public sealed class Database : IDatabase
         return Convert.ToInt32(cmd.ExecuteScalar());
     }
 
+    public bool Edit(Movie movie)
+    {
+        using var connection = Open();
+        using var cmd = connection.CreateCommand();
+        cmd.CommandText = """
+            UPDATE Movies
+            SET Title = $title, Director = $director, Year = $year, Genre = $genre, Rating = $rating, Description = $description, Actors = $actors
+            WHERE Id = $id
+            """;
+        Bind(cmd, movie);
+        cmd.Parameters.AddWithValue("$id", movie.Id);
+        return cmd.ExecuteNonQuery() > 0;
+    }
+
+    public bool Delete(int id)
+    {
+        using var connection = Open();
+        using var cmd = connection.CreateCommand();
+        cmd.CommandText = "DELETE FROM Movies WHERE Id = $id";
+        cmd.Parameters.AddWithValue("$id", id);
+        return cmd.ExecuteNonQuery() > 0;
+    }
+
+    //vrushta detaili samo za edin film
+    public Movie? GetById(int id)
+    {
+        using var connection = Open();
+        using var cmd = connection.CreateCommand();
+        cmd.CommandText = "SELECT Id, Title, Director, Year, Genre, Rating, Description, Actors FROM Movies WHERE Id = $id";
+        cmd.Parameters.AddWithValue("$id", id);
+        using var reader = cmd.ExecuteReader();
+        return reader.Read() ? Map(reader) : null;
+    }
+
+
+
+    public bool TitleExists(string title, int bezId = 0)
+    {
+        throw new NotImplementedException();
+    }
+
+    public bool DirectorExists(string director, int bezId = 0)
+    {
+        throw new NotImplementedException();
+    }
+
     // ---------------- Genres ----------------
 
     public IReadOnlyList<Genre> GetGenres()
@@ -298,11 +344,10 @@ public sealed class Database : IDatabase
     {
         using var connection = Open();
         using var cmd = connection.CreateCommand();
-        cmd.CommandText = "DELETE FROM Genres WHERE Id = $id";
-        cmd.Parameters.AddWithValue("$id", id);
-        return cmd.ExecuteNonQuery() > 0;
-    }
+        cmd.CommandText = "DELETE FROM Genres WHERE Id = $id"; }
+  
 
+ 
     // ima li film s tozi zhanr (proverka predi iztrivane)
     public bool GenreInUse(int id)
     {
@@ -384,6 +429,6 @@ public sealed class Database : IDatabase
         using var cmd = connection.CreateCommand();
         cmd.CommandText = "SELECT 1 FROM Movies WHERE DirectorId = $id LIMIT 1";
         cmd.Parameters.AddWithValue("$id", id);
-        return cmd.ExecuteScalar() is not null;
-    }
+        return cmd.ExecuteScalar() is not null; }
+   
 }

@@ -8,6 +8,14 @@ public interface IDatabase
     int Add(Movie movie);
     //chete redovete ot Movies i gi slaga v spisuka. IReadOnlyList kazva, che tozi spisuk moje samo da se chete, i ako napishesh list.Add ili list.Remove shte dade greshka
 
+    bool Edit(Movie movie);
+    bool Delete(int id);
+    Movie? GetById(int id);
+
+    // za da ne se povtarqt filmi
+    bool TitleExists(string title, int bezId = 0);
+    bool DirectorExists(string director, int bezId = 0);
+
     IReadOnlyList<Genre> GetGenres();
     Genre? GetGenreById(int id);
     int AddGenre(Genre genre);
