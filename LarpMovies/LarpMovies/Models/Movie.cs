@@ -33,8 +33,7 @@ public class Movie
     [StringLength(300, ErrorMessage = "Actors can be up to 300 characters.")]
     public string? Actors { get; set; }
 
-    // Само за показване(идват от JOIN). Задължително са string?, иначе ASP.NET Core
-    // ги счита за Required (nullable reference types) и формата никога не минава валидация.
+
     [Required(ErrorMessage = "Director name is required.")]
     [StringLength(80, MinimumLength = 2, ErrorMessage = "Director name must be between 2 and 80 characters.")]
     public string DirectorName { get; set; } = "";
