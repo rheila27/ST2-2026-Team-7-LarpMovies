@@ -1,6 +1,7 @@
 ﻿using LarpMovies.Data;
 using LarpMovies.Models;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Rendering;
 
 namespace LarpMovies.Controllers;
 
@@ -18,14 +19,15 @@ public class MoviesController : Controller
     public IActionResult List() => Json(_db.GetAll());
 
     // GET /Movies/Create -> prazna forma
-    public IActionResult Create() => View(new Movie { Year = DateTime.Now.Year });
+    
 
     // POST /Movies/Create -> proverka i zapis
     [HttpPost, ValidateAntiForgeryToken]
     public IActionResult Create(Movie movie)
     {
-        if (!ModelState.IsValid)
+        if(!ModelState.IsValid)
         {
+            LoadLists(movie.DirectorId, movie.GenreId);
             return View(movie);
         }
 

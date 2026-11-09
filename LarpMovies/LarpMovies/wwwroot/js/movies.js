@@ -75,6 +75,14 @@
             cell(tr, m.genre);
             cell(tr, m.rating);
             cell(tr, m.actors);
+            const tdActions = document.createElement('td');
+            tdActions.className = 'text-end';
+            tdActions.innerHTML = `
+                <a href="/Movies/Edit/${m.id}" class="btn btn-sm btn-outline-primary me-1">Edit</a>
+                <a href="/Movies/Details/${m.id}" class="btn btn-sm btn-outline-info me-1">Details</a>
+                <a href="/Movies/Delete/${m.id}" class="btn btn-sm btn-outline-danger">Delete</a>   
+            `;
+            tr.appendChild(tdActions); // tova sled cell (tr, m.actors) dobavq edit, detail i delete butoni istfg)
             els.body.appendChild(tr);
         });
     }
