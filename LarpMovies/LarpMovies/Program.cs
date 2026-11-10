@@ -26,6 +26,14 @@ if (!Path.IsPathRooted(dataSource))
 
 // Singleton: cialoto prilozhenie polzva edin i sushti Database prez IDatabase.
 builder.Services.AddSingleton<IDatabase>(_ => Database.Initialize(connectionString));
+// Singleton: cialoto prilozhenie polzva edin i sushti Database prez IDatabase.
+builder.Services.AddSingleton<IDatabase>(_ => Database.Initialize(connectionString));
+
+// Repository: vseki kontroler poluchava samo interfeisa, ot koito se nuzhdae, no vsichki sochat kum sushtiya Database
+builder.Services.AddSingleton<IMovieRepository>(sp => sp.GetRequiredService<IDatabase>());
+builder.Services.AddSingleton<IGenreRepository>(sp => sp.GetRequiredService<IDatabase>());
+builder.Services.AddSingleton<IDirectorRepository>(sp => sp.GetRequiredService<IDatabase>());
+
 
 var app = builder.Build();
 

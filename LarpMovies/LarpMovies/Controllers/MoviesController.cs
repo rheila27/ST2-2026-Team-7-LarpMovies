@@ -1,15 +1,15 @@
 ﻿using LarpMovies.Data;
 using LarpMovies.Models;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Rendering;
 
 namespace LarpMovies.Controllers;
 
 public class MoviesController : Controller
 {
-    private readonly IDatabase _db;
+    // Repository: kontrolerut poznava samo hranilishteto za filmi, ne i celiya Database
+    private readonly IMovieRepository _db;
 
-    public MoviesController(IDatabase db) => _db = db;
+    public MoviesController(IMovieRepository db) => _db = db;
 
     // GET /Movies -> stranicata sas spisuka (tablicata se pulni ot JavaScript)
     public IActionResult Index() => View();
@@ -25,7 +25,7 @@ public class MoviesController : Controller
     [HttpPost, ValidateAntiForgeryToken]
     public IActionResult Create(Movie movie)
     {
-        if(!ModelState.IsValid)
+        if (!ModelState.IsValid)
         {
             return View(movie);
         }
@@ -88,7 +88,4 @@ public class MoviesController : Controller
         var movie = _db.GetById(id);
         return movie is null ? NotFound() : View(movie);
     }
-
-
 }
-
