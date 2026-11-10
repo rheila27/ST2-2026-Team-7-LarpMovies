@@ -19,8 +19,8 @@ namespace LarpMovies.Services
     {
         // Базовата заявка с JOIN за режисьор и жанр
         private const string BaseSelect = """
-        SELECT m.Id, m.Title, m.DirectorId, m.GenreId, m.Year, m.Rating, m.Actors, m.Description,
-               d.Name AS DirectorName, g.Name AS GenreName
+        SELECT m.Id, m.Title, m.Year, m.Rating, m.Description, m.Actors,
+        m.DirectorId, m.GenreId, d.Name AS DirectorName, g.Name AS GenreName
         FROM Movies m
         LEFT JOIN Directors d ON m.DirectorId = d.Id
         LEFT JOIN Genres g ON m.GenreId = g.Id
