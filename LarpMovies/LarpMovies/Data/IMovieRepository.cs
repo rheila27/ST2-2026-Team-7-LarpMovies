@@ -18,4 +18,8 @@ public interface IMovieRepository
 
     // za da ne se povtarqt filmi
     bool TitleExists(string title, int bezId = 0);
+
+    // filmi sas sushtiya zhanr ili rejisyor (bez samiya film), nai-podobnite purvi
+    IReadOnlyList<Movie> GetSimilar(int id, int limit = 4);
 }
+

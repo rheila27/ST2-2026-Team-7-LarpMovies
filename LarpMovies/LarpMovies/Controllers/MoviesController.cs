@@ -83,12 +83,17 @@ public class MoviesController : Controller
         return RedirectToAction(nameof(Index));
     }
 
-    // GET /Movies/Details/5 -> pokazva detalite za filmite :)
     [HttpGet]
     public IActionResult Details(int id)
     {
         var movie = _db.GetById(id);
-        return movie is null ? NotFound() : View(movie);
+        if (movie is null)
+        {
+            return NotFound();
+        }
+
+        ViewBag.Similar = _db.GetSimilar(id);
+        return View(movie);
     }
 
     //metod za izvikvane  na random film ot bazata, za da se pokazva na nachalnata stranica

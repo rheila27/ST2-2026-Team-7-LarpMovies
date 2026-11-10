@@ -238,3 +238,27 @@ body {
     color: #a8456a;
     margin: 0.7rem 0 0;
 }
+
+/* ===== Similar movies ===== */
+.cq-similar-title {
+    font-family: 'Playfair Display', Georgia, serif;
+    font-style: italic;
+    color: #a8456a;
+}
+
+.cq-similar-card {
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+    .cq-similar-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 10px 24px rgba(217, 122, 149, 0.28);
+    }
+
+.cq-badge {
+    background: #fde8ee;
+    color: #a8456a;
+    border: 1px solid #f4c2d0;
+    border-radius: 999px;
+    font-weight: 500;
+}

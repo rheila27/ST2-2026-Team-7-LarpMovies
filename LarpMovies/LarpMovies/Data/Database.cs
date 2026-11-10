@@ -502,4 +502,34 @@ public sealed class Database : IDatabase
         return Convert.ToInt32(insert.ExecuteScalar());
     }
 
+    // podobni filmi: sushtiyat zhanr ili sushtiyat rejisyor.
+    // Podrezhdane: purvo tezi, koito suvpadat i po dvete (2), posle po edno (1), posle po rejting.
+    public IReadOnlyList<Movie> GetSimilar(int id, int limit = 4)
+    {
+        var movie = GetById(id);
+        if (movie is null)
+        {
+            return new List<Movie>();
+        }
+
+        using var connection = Open();
+        using var cmd = connection.CreateCommand();
+        cmd.CommandText = MovieSelect +
+            " WHERE m.Id <> $id AND (m.GenreId = $genreId OR m.DirectorId = $directorId)" +
+            " ORDER BY (m.GenreId = $genreId) + (m.DirectorId = $directorId) DESC, m.Rating DESC" +
+            " LIMIT $limit";
+        cmd.Parameters.AddWithValue("$id", id);
+        cmd.Parameters.AddWithValue("$genreId", movie.GenreId);
+        cmd.Parameters.AddWithValue("$directorId", movie.DirectorId);
+        cmd.Parameters.AddWithValue("$limit", limit);
+
+        using var reader = cmd.ExecuteReader();
+        var result = new List<Movie>();
+        while (reader.Read())
+        {
+            result.Add(Map(reader));
+        }
+        return result;
+    }
+
 }

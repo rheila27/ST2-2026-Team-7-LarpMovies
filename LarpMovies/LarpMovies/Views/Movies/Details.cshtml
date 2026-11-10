@@ -35,4 +35,43 @@
         <a asp-action="Edit" asp-route-id="@Model?.Id" class="btn btn-primary me-2">Edit</a>
         <a asp-action="Index" class="btn btn-secondary">Back to List</a>
     </div>
+
+    @{
+    var similar = ViewBag.Similar as IReadOnlyList<LarpMovies.Models.Movie>;
+}
+
+<hr class="mt-4" />
+<h2 class="h4 cq-similar-title">You might also like &#9825;</h2>
+
+@if (similar is not null && similar.Count > 0)
+{
+    <div class="row g-3 mt-1">
+        @foreach (var m in similar)
+        {
+            <div class="col-sm-6 col-lg-3">
+                <a asp-action="Details" asp-route-id="@m.Id" class="text-decoration-none">
+                    <div class="card h-100 cq-similar-card">
+                        <div class="card-body">
+                            <h3 class="h6 mb-1">@m.Title</h3>
+                            <div class="small text-muted">@m.Year &middot; @m.DirectorName</div>
+                            <div class="small mb-2">@m.GenreName &middot; &#9733; @m.Rating</div>
+                            @if (m.DirectorId == Model.DirectorId)
+                            {
+                                <span class="badge cq-badge">same director</span>
+                            }
+                            @if (m.GenreId == Model.GenreId)
+                            {
+                                <span class="badge cq-badge">same genre</span>
+                            }
+                        </div>
+                    </div>
+                </a>
+            </div>
+        }
+    </div>
+}
+else
+{
+    <p class="text-muted mt-2">No similar movies yet. Add more films with the same genre or director!</p>
+}
 </div>
