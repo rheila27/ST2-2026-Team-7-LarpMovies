@@ -20,12 +20,8 @@ public interface IMovieRepository
     // za da ne se povtarqt filmi
     bool TitleExists(string title, int bezId = 0);
 
-<<<<<<< HEAD
     // filmi sas sushtiya zhanr ili rejisyor (bez samiya film), nai-podobnite purvi
     IReadOnlyList<Movie> GetSimilar(int id, int limit = 4);
-}
 
-=======
     IReadOnlyList<Movie> ExecuteSqlSelect(SqlSelectCommand command);
 }
->>>>>>> 0e7c67f85adcaaa20609101db83d92e601aca323
