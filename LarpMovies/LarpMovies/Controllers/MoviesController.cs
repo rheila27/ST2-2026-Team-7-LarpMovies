@@ -1,6 +1,8 @@
 ﻿using LarpMovies.Data;
 using LarpMovies.Models;
 using Microsoft.AspNetCore.Mvc;
+using System;
+using System.Linq;
 
 namespace LarpMovies.Controllers;
 
@@ -88,4 +90,30 @@ public class MoviesController : Controller
         var movie = _db.GetById(id);
         return movie is null ? NotFound() : View(movie);
     }
+
+    //metod za izvikvane  na random film ot bazata, za da se pokazva na nachalnata stranica
+
+    // GET /Movies/SurpriseMe -> izbira sluchayen film i prenasochva kym Details
+    [HttpGet]
+    public IActionResult SurpriseMe()
+    {
+        // 1. Vzimame vsichki filmi ot bazata prez _db repository-to
+        var movies = _db.GetAll()?.ToList();
+
+        // 2. Proveriavame dali imame filmi v bazata
+        if (movies == null || !movies.Any())
+        {
+            TempData["Message"] = "Nqma namereni filmi za izbor.";
+            return RedirectToAction(nameof(Index));
+        }
+
+        // 3. Izbirame sluchayen indeks
+        var random = new Random();
+        int randomIndex = random.Next(movies.Count);
+        var randomMovie = movies[randomIndex];
+
+        // 4. Prenasochvame kym Details stranicata na sluchajnia film
+        return RedirectToAction(nameof(Details), new { id = randomMovie.Id });
+    }
+
 }
