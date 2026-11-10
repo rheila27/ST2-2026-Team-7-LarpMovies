@@ -1,8 +1,9 @@
-﻿using LarpMovies.Data;
-using LarpMovies.Models;
-using Microsoft.AspNetCore.Mvc;
-using System;
+﻿using System;
 using System.Linq;
+using LarpMovies.Data;
+using LarpMovies.Models;
+using LarpMovies.Services;
+using Microsoft.AspNetCore.Mvc;
 
 namespace LarpMovies.Controllers;
 
@@ -10,8 +11,14 @@ public class MoviesController : Controller
 {
     // Repository: kontrolerut poznava samo hranilishteto za filmi, ne i celiya Database
     private readonly IMovieRepository _db;
+    private readonly IGeminiQueryService _geminiService; // <-- ДОБАВЕНО ПОЛЕ
 
-    public MoviesController(IMovieRepository db) => _db = db;
+    //konstruktor
+    public MoviesController(IMovieRepository db, IGeminiQueryService geminiService)
+    {
+        _db = db;
+        _geminiService = geminiService;
+    }
 
     // GET /Movies -> stranicata sas spisuka (tablicata se pulni ot JavaScript)
     public IActionResult Index() => View();
@@ -115,5 +122,44 @@ public class MoviesController : Controller
         // 4. Prenasochvame kym Details stranicata na sluchajnia film
         return RedirectToAction(nameof(Details), new { id = randomMovie.Id });
     }
+    
+    //МЕТОД ЗА AI ТЪРСЕНЕТО (POST /Movies/AiSearch)
+    [HttpPost]
+    public async Task<IActionResult> AiSearch([FromBody] AiSearchRequest request)
+    {
+        if (string.IsNullOrWhiteSpace(request?.Prompt))
+        {
+            return BadRequest(new { error = "Моля, въведете въпрос за търсене." });
+        }
 
+        try
+        {
+            // Извличане на структурирана JSON заявка през Gemini
+            var jsonQuery = await _geminiService.TranslatePromptToJsonQueryAsync(request.Prompt);
+
+            // Превеждане на JSON заявката към параметризиран SQL
+            var sqlCommand = JsonQuerySqlTranslator.Translate(jsonQuery);
+
+            // Изпълнение на SQL през хранилището
+            var movies = _db.ExecuteSqlSelect(sqlCommand);
+
+            return Json(new
+            {
+                success = true,
+                movies,
+                explanation = jsonQuery.Explanation,
+                readableSql = sqlCommand.ReadableSql
+            });
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { error = ex.Message });
+        }
+    }
+}
+
+// ПОМОЩЕН КЛАС ЗА ТЯЛОТО НА ЗАЯВКАТА
+public class AiSearchRequest
+{
+    public string Prompt { get; set; } = string.Empty;
 }

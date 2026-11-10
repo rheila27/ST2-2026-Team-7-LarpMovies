@@ -2,9 +2,11 @@
 
 
 using System.Globalization;
+using LarpMovies.Configuration;
 using LarpMovies.Data;
-using Microsoft.EntityFrameworkCore;
+using LarpMovies.Services;
 using Microsoft.Data.Sqlite;
+using Microsoft.EntityFrameworkCore;
 
 // Fiksirame kulturata, za da se razbirat drobnite chisla s tochka (8.3) na vsichki kompyutri haeh
 CultureInfo.DefaultThreadCurrentCulture = CultureInfo.InvariantCulture;
@@ -34,6 +36,13 @@ builder.Services.AddSingleton<IMovieRepository>(sp => sp.GetRequiredService<IDat
 builder.Services.AddSingleton<IGenreRepository>(sp => sp.GetRequiredService<IDatabase>());
 builder.Services.AddSingleton<IDirectorRepository>(sp => sp.GetRequiredService<IDatabase>());
 
+builder.Services.Configure<ExternalApisOptions>(
+    builder.Configuration.GetSection("ExternalApis"));
+
+builder.Services.AddHttpClient<IGeminiQueryService, GeminiQueryService>(client =>
+{
+    client.Timeout = TimeSpan.FromSeconds(20);
+});
 
 var app = builder.Build();
 

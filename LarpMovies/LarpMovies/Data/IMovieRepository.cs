@@ -1,4 +1,5 @@
 ﻿using LarpMovies.Models;
+using LarpMovies.Services;
 
 namespace LarpMovies.Data;
 
@@ -18,4 +19,6 @@ public interface IMovieRepository
 
     // za da ne se povtarqt filmi
     bool TitleExists(string title, int bezId = 0);
+
+    IReadOnlyList<Movie> ExecuteSqlSelect(SqlSelectCommand command);
 }

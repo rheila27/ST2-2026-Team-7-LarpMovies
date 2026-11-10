@@ -3,7 +3,6 @@ using LarpMovies.Models;
 
 namespace LarpMovies.Services
 {
-
     //готов обект-пакет (контейнер), в който преводачът
     //събира на едно място всичко необходимо за изпълнението на готовата заявка
     public sealed record SqlSelectCommand(
@@ -11,7 +10,8 @@ namespace LarpMovies.Services
         IReadOnlyDictionary<string, object> Parameters,
         string ReadableSql);
 
-    //за преобразуване на JSONQuery-то от Gemini в SQL заявка (SELECT * FROM Movies WHERE) за базата данни (таблицата Movies)
+    //за преобразуване на JSONQuery-то от Gemini в SQL заявка (SELECT * FROM Movies WHERE)
+    //за базата данни (таблицата Movies), както и за защита от SQL инжекции
     //логиката е:
     //Естествен език -> Gemini (JSONQuery) -> Преводач (SqlSelectCommand) -> SQLite БД
     // Всички колони се проверяват в бял списък (whitelist), а стойностите се предават САМО като параметри.

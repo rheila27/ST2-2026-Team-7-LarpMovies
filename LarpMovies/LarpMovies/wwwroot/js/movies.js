@@ -113,4 +113,51 @@
             tr.appendChild(td);
             els.body.appendChild(tr);
         });
+
+    const aiSearchBtn = document.getElementById('aiSearchBtn');
+    const aiPromptInput = document.getElementById('aiPromptInput');
+    const aiInfoBox = document.getElementById('aiInfoBox');
+    const aiExplanation = document.getElementById('aiExplanation');
+    const aiGeneratedSql = document.getElementById('aiGeneratedSql');
+
+    aiSearchBtn?.addEventListener('click', async function () {
+        const prompt = (aiPromptInput?.value ?? '').trim();
+        if (!prompt) return;
+
+        aiSearchBtn.disabled = true;
+
+        try {
+            const response = await fetch('/Movies/AiSearch', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ prompt: prompt })
+            });
+
+            const data = await response.json();
+            if (!response.ok) throw new Error(data.error || 'Грешка при търсенето.');
+
+            // 1. Показваме обяснението и SQL-а
+            if (aiExplanation) aiExplanation.textContent = data.explanation || '';
+            if (aiGeneratedSql) aiGeneratedSql.textContent = 'Генериран SQL: ' + (data.readableSql || '');
+            if (aiInfoBox) aiInfoBox.classList.remove('d-none');
+
+            // 2. Обновяваме списъка с филмите и преначертаваме таблицата
+            state.all = data.movies || [];
+            state.terms = []; // изчистваме термините за маркиране (highlight)
+            state.filtered = state.all;
+            renderRows(state.filtered);
+
+            if (els.info) {
+                els.info.textContent = `Showing ${state.filtered.length} of ${state.all.length} (AI Search)`;
+            }
+
+            // 3. Изчистваме обикновеното текстово поле за филтриране, за да няма конфликт
+            if (els.filter) els.filter.value = '';
+
+        } catch (err) {
+            alert(err.message);
+        } finally {
+            aiSearchBtn.disabled = false;
+        }
+    });
 })();
