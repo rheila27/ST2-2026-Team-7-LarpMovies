@@ -2,6 +2,20 @@
     ViewData["Title"] = "Movies";
 }
 
+<div class="card mb-4 border-primary">
+    <div class="card-body">
+        <label class="form-label fw-bold">Търсене с Gemini AI:</label>
+        <div class="input-group">
+            <input type="text" id="aiPromptInput" class="form-control" placeholder="Напр.: Екшъни с Киану Рийвс след 2010 г. с оценка над 7">
+            <button class="btn btn-primary" id="aiSearchBtn" type="button">Търси</button>
+        </div>
+        <div id="aiInfoBox" class="mt-2 text-muted small d-none">
+            <div id="aiExplanation" class="text-success fw-bold"></div>
+            <div id="aiGeneratedSql" class="font-monospace"></div>
+        </div>
+    </div>
+</div>
+
 <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
     <h1 class="h3 mb-0 cq-title">Movies</h1>
     <div>

@@ -1,4 +1,5 @@
 ﻿using LarpMovies.Models;
+using LarpMovies.Services;
 using Microsoft.Data.Sqlite;
 
 namespace LarpMovies.Data;
@@ -52,7 +53,12 @@ public sealed class Database : IDatabase
         var connection = new SqliteConnection(_connectionString);
         connection.Open();
 
-        // 2) SQLite po podrazbirane ignorira FOREIGN KEY; nastroikata e za vsyaka vrazka otdelno
+        // регистрация на unicode функции, за да не счита еднакви букви за различни
+        // (подминава се case-sensitivity-то на sqlite)
+        connection.CreateFunction("LOWER", (string? s) => s?.ToLowerInvariant());
+        connection.CreateFunction("UPPER", (string? s) => s?.ToUpperInvariant());
+
+        // SQLite po podrazbirane ignorira FOREIGN KEY; nastroikata e za vsyaka vrazka otdelno
         using var pragma = connection.CreateCommand();
         pragma.CommandText = "PRAGMA foreign_keys = ON;";
         pragma.ExecuteNonQuery();
@@ -311,7 +317,35 @@ public sealed class Database : IDatabase
         return reader.Read() ? Map(reader) : null;
     }
 
+    // Изпълнява динамична заявка от преводача за търсене с Gemini AI
+    public IReadOnlyList<Movie> ExecuteSqlSelect(SqlSelectCommand command)
+    {
+        ArgumentNullException.ThrowIfNull(command);
 
+        using var connection = Open();
+        using var cmd = connection.CreateCommand();
+
+        cmd.CommandText = command.Sql;
+
+        // Прехвърляме параметрите ($p0, $p1, $limit и т.н.)
+        foreach (var (paramName, value) in command.Parameters)
+        {
+            var param = cmd.CreateParameter();
+            param.ParameterName = paramName;
+            param.Value = value ?? DBNull.Value;
+            cmd.Parameters.Add(param);
+        }
+
+        using var reader = cmd.ExecuteReader();
+        var result = new List<Movie>();
+        while (reader.Read())
+        {
+            // Използваме съществуващия ти помощен метод Map()
+            result.Add(Map(reader));
+        }
+
+        return result;
+    }
 
     // ima li drug film s sustoto zaglavie (bezId = pri redakciya ne se broi samiyat film)
     public bool TitleExists(string title, int bezId = 0)

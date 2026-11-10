@@ -1,4 +1,5 @@
 ﻿using LarpMovies.Models;
+using LarpMovies.Services;
 
 namespace LarpMovies.Data
 {
@@ -12,6 +13,6 @@ namespace LarpMovies.Data
             bool UpdateGenre(Genre genre);
             bool DeleteGenre(int id);
             bool GenreInUse(int id);
-        }
+    }
     
 }
