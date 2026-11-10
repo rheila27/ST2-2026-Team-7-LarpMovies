@@ -18,10 +18,10 @@ namespace LarpMovies.Services
         //верига от резервни модели при надвишен лимит (HTTP 429) или претоварване (HTTP 503)
         private static readonly string[] FallbackModels =
         {
-        "gemini-3-flash-preview",
-        "gemini-3.5-flash",
-        "gemini-2.5-flash",
-        "gemini-2.5-flash-lite"
+            "gemini-3-flash-preview",
+            "gemini-3.5-flash",
+            "gemini-2.5-flash",
+            "gemini-2.5-flash-lite"
         };
 
         private static readonly JsonSerializerOptions JsonOpts = new()
@@ -93,35 +93,31 @@ namespace LarpMovies.Services
                 {
                     using var response = await _httpClient.SendAsync(request, cancellationToken);
 
-                    if (response.StatusCode is HttpStatusCode.TooManyRequests or HttpStatusCode.ServiceUnavailable)
-                    {
-                        _logger.LogWarning("Модел {Model} върна {StatusCode}. Пробваме следващ резервен модел...", model, response.StatusCode);
-                        continue;
-                    }
-
+                    // При статус различен от 200 OK записваме грешката и продължаваме към следващия
                     if (!response.IsSuccessStatusCode)
                     {
                         var errBody = await response.Content.ReadAsStringAsync(cancellationToken);
-                        throw new HttpRequestException(
-                            $"Грешка при заявка към Gemini API ({model}): {response.StatusCode} - {errBody}");
+                        _logger.LogWarning("Модел {Model} върна грешка {StatusCode}: {Body}. Преминаваме към следващия...",
+                            model, response.StatusCode, errBody);
+
+                        lastException = new HttpRequestException($"Грешка при {model}: {response.StatusCode} - {errBody}");
+                        continue; // Преминава към следващия модел в modelsToTry
                     }
 
+                    // При успех четем JSON отговора и го връщаме веднага
                     var responseJson = await response.Content.ReadAsStringAsync(cancellationToken);
                     return ParseGeminiResponse(responseJson);
                 }
-                catch (HttpRequestException ex) when (ex.StatusCode is HttpStatusCode.TooManyRequests or HttpStatusCode.ServiceUnavailable)
-                {
-                    _logger.LogWarning("Модел {Model} върна квотен лимит. Пробваме следващ модел...", model);
-                    lastException = ex;
-                }
                 catch (Exception ex)
                 {
+                    // При мрежов проблем или изключение записваме и продължаваме
                     lastException = ex;
-                    _logger.LogError(ex, "Грешка при комуникация с модел {Model}.", model);
-                    break;
+                    _logger.LogWarning(ex, "Проблем при връзка с модел {Model}. Пробваме следващия...", model);
+                    continue; // Преминава към следващия модел
                 }
             }
 
+            // Дефинитивен край: Изпълнява се САМО ако всички модели в списъка са се провалили
             throw new InvalidOperationException(
                 "Всички опитани Gemini модели надвишиха квотата си или са временно недостъпни. Моля, опитайте след малко.",
                 lastException);
