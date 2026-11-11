@@ -262,3 +262,38 @@ body {
     border-radius: 999px;
     font-weight: 500;
 }
+
+/* AI бутон */
+#aiSearchBtn {
+    background-color: var(--pink-main);
+    border-color: var(--pink-main);
+    color: #fff;
+    outline: none;
+    box-shadow: none;
+    transition: all 0.2s ease-in-out;
+}
+
+    #aiSearchBtn:hover {
+        background-color: var(--pink-dark);
+        border-color: var(--pink-dark);
+        color: #fff;
+    }
+
+    /* Розов фокус и outline вместо синия по подразбиране */
+    #aiSearchBtn:focus,
+    #aiSearchBtn:focus-visible {
+        background-color: var(--pink-dark);
+        border-color: var(--pink-dark);
+        outline: 2px solid var(--pink-border) !important;
+        box-shadow: 0 0 0 0.25rem rgba(199, 53, 120, 0.25) !important;
+    }
+
+    /* Когато бутонът е неактивен/изчаква (disabled) по време на зареждане */
+    #aiSearchBtn:disabled {
+        background-color: var(--pink-border) !important;
+        border-color: var(--pink-border) !important;
+        color: #ffffff !important;
+        opacity: 0.75;
+        cursor: not-allowed;
+        box-shadow: none !important;
+    }
