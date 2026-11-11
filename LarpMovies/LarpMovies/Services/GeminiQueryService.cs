@@ -13,15 +13,13 @@ namespace LarpMovies.Services
         private const string GeminiEndpointTemplate =
             "https://generativelanguage.googleapis.com/v1beta/models/{0}:generateContent?key={1}";
 
-        private const string DefaultModel = "gemini-3-flash-preview";
+        private const string DefaultModel = "gemini-3.8-flash";
 
         //верига от резервни модели при надвишен лимит (HTTP 429) или претоварване (HTTP 503)
         private static readonly string[] FallbackModels =
         {
-            "gemini-3-flash-preview",
-            "gemini-3.5-flash",
-            "gemini-2.5-flash",
-            "gemini-2.5-flash-lite"
+            "gemini-3.8-flash",
+            "gemini-3.5-flash-lite"
         };
 
         private static readonly JsonSerializerOptions JsonOpts = new()

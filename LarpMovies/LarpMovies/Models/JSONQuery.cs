@@ -1,4 +1,5 @@
-﻿using System.Text.Json.Serialization;
+﻿using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace LarpMovies.Models
 {
@@ -43,6 +44,29 @@ namespace LarpMovies.Models
 
         //Търсената стойност, която се подава като SQL параметър.
         [JsonPropertyName("value")]
+        [JsonConverter(typeof(AnyToStringConverter))]
         public string Value { get; set; } = string.Empty;
+
+        // Помощен конвертор, който гарантира, че каквото и да върне Gemini, става на string
+        public sealed class AnyToStringConverter : JsonConverter<string>
+        {
+            public override string Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+            {
+                return reader.TokenType switch
+                {
+                    JsonTokenType.String => reader.GetString() ?? string.Empty,
+                    JsonTokenType.Number => reader.GetDouble().ToString(System.Globalization.CultureInfo.InvariantCulture),
+                    JsonTokenType.True => "true",
+                    JsonTokenType.False => "false",
+                    JsonTokenType.Null => string.Empty,
+                    _ => JsonDocument.ParseValue(ref reader).RootElement.ToString()
+                };
+            }
+
+            public override void Write(Utf8JsonWriter writer, string value, JsonSerializerOptions options)
+            {
+                writer.WriteStringValue(value);
+            }
+        }
     }
 }
